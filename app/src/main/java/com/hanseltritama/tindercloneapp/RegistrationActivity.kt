@@ -3,9 +3,12 @@ package com.hanseltritama.tindercloneapp
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.RadioButton
 import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 import kotlinx.android.synthetic.main.activity_registration.*
 
 class RegistrationActivity : AppCompatActivity() {
@@ -39,11 +42,26 @@ class RegistrationActivity : AppCompatActivity() {
 
     private fun setupUI() {
         register_submit_button.setOnClickListener {
+            val selectId: Int = radio_group.checkedRadioButtonId
+            val radioButton: RadioButton = findViewById(selectId)
+            radioButton.text ?: return@setOnClickListener
+
             val email: String = email_field.text.toString()
             val password: String = password_field.text.toString()
+            val name: String = name_field.text.toString()
+
             mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
                 if (!task.isSuccessful) {
                     Toast.makeText(this, "Sign Up Error", Toast.LENGTH_SHORT).show()
+                } else {
+                    val userId: String? = mAuth.currentUser?.uid
+                    val currentUserDb: DatabaseReference =
+                        FirebaseDatabase.getInstance().reference.child("Users")
+                        .child(radioButton.text.toString())
+                        .child(userId.toString())
+                        .child("name")
+
+                    currentUserDb.setValue(name)
                 }
             }
         }
