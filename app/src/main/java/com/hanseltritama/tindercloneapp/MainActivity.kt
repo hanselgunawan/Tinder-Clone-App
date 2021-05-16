@@ -27,6 +27,10 @@ class MainActivity : AppCompatActivity() {
 
     private var oppositeUserSex: String? = null
 
+    private lateinit var usersDb: DatabaseReference
+
+    private var currentId: String? = null
+
     private lateinit var listView: ListView
     private lateinit var cardList: List<Cards>
 
@@ -34,7 +38,10 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        usersDb = FirebaseDatabase.getInstance().reference.child("Users")
+
         mAuth = FirebaseAuth.getInstance()
+        currentId = mAuth.currentUser?.uid
 
         checkSex()
 
@@ -42,6 +49,18 @@ class MainActivity : AppCompatActivity() {
 
         adapter = CardAdapter(this, R.layout.item, cardList)
 
+        setupFlingSwipeListener()
+
+        logout_button.setOnClickListener {
+            mAuth.signOut()
+            val intent = Intent(this, LoginRegistrationActivity::class.java)
+            startActivity(intent)
+            finish()
+            return@setOnClickListener
+        }
+    }
+
+    private fun setupFlingSwipeListener() {
         val flingContainer: SwipeFlingAdapterView? = frame
 
         flingContainer?.adapter = adapter
@@ -54,14 +73,27 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onLeftCardExit(dataObject: Any) {
-                //Do something on the left!
-                //You also have access to the original object.
-                //If you want to use it just cast it (String) dataObject
-                Toast.makeText(this@MainActivity, "Left!", Toast.LENGTH_SHORT).show()
+                val cardObj: Cards = dataObject as Cards
+                val userId: String? = cardObj.userId
+                usersDb.child(oppositeUserSex ?: "")
+                    .child(userId ?: "")
+                    .child("connections")
+                    .child("nope")
+                    .child(currentId ?: "")
+                    .setValue(true)
+                Toast.makeText(this@MainActivity, "Nope!", Toast.LENGTH_SHORT).show()
             }
 
             override fun onRightCardExit(dataObject: Any) {
-                Toast.makeText(this@MainActivity, "Right!", Toast.LENGTH_SHORT).show()
+                val cardObj: Cards = dataObject as Cards
+                val userId: String? = cardObj.userId
+                usersDb.child(oppositeUserSex ?: "")
+                    .child(userId ?: "")
+                    .child("connections")
+                    .child("yup")
+                    .child(currentId ?: "")
+                    .setValue(true)
+                Toast.makeText(this@MainActivity, "Yup!", Toast.LENGTH_SHORT).show()
             }
 
             override fun onAdapterAboutToEmpty(itemsInAdapter: Int) {
@@ -75,14 +107,6 @@ class MainActivity : AppCompatActivity() {
             override fun onScroll(scrollProgressPercent: Float) {
             }
         })
-
-        logout_button.setOnClickListener {
-            mAuth.signOut()
-            val intent = Intent(this, LoginRegistrationActivity::class.java)
-            startActivity(intent)
-            finish()
-            return@setOnClickListener
-        }
     }
 
     private fun checkSex() {
@@ -146,7 +170,10 @@ class MainActivity : AppCompatActivity() {
             .child(oppositeUserSex ?: "")
         oppositeSexDb.addChildEventListener(object: ChildEventListener {
             override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
-                if (snapshot.exists()) {
+                if (snapshot.exists()
+                    && !snapshot.child("connections").child("nope").hasChild(currentId.toString())
+                    && !snapshot.child("connections").child("yup").hasChild(currentId.toString())) {
+
                     val item = Cards(snapshot.key, snapshot.child("name").value.toString())
                     (cardList as ArrayList<Cards>).add(item)
                     adapter.notifyDataSetChanged()
