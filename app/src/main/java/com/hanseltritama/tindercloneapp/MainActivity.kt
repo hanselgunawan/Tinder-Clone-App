@@ -4,23 +4,31 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.ArrayAdapter
+import android.widget.ListView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.*
+import com.hanseltritama.tindercloneapp.adapter.CardAdapter
+import com.hanseltritama.tindercloneapp.data.Cards
 import com.lorentzos.flingswipe.SwipeFlingAdapterView
 import kotlinx.android.synthetic.main.activity_main.*
 
 
 class MainActivity : AppCompatActivity() {
 
-    private var al: ArrayList<String> = arrayListOf()
-    private var arrayAdapter: ArrayAdapter<String>? = null
+    private lateinit var adapter: CardAdapter
     private var i = 0
+
     private lateinit var mAuth: FirebaseAuth
+
     private var userSex: String? = null
+
     private var oppositeUserSex: String? = null
+
+    private lateinit var listView: ListView
+    private lateinit var cardList: List<Cards>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,17 +38,19 @@ class MainActivity : AppCompatActivity() {
 
         checkSex()
 
-        arrayAdapter = ArrayAdapter(this, R.layout.item, R.id.helloText, al)
+        cardList = ArrayList<Cards>()
+
+        adapter = CardAdapter(this, R.layout.item, cardList)
 
         val flingContainer: SwipeFlingAdapterView? = frame
 
-        flingContainer?.adapter = arrayAdapter
+        flingContainer?.adapter = adapter
         flingContainer?.setFlingListener(object : SwipeFlingAdapterView.onFlingListener {
             override fun removeFirstObjectInAdapter() {
                 // this is the simplest way to delete an object from the Adapter (/AdapterView)
                 Log.d("LIST", "removed object!")
-                al.removeAt(0)
-                arrayAdapter?.notifyDataSetChanged()
+                (cardList as ArrayList<Cards>).removeAt(0)
+                adapter.notifyDataSetChanged()
             }
 
             override fun onLeftCardExit(dataObject: Any) {
@@ -137,8 +147,9 @@ class MainActivity : AppCompatActivity() {
         oppositeSexDb.addChildEventListener(object: ChildEventListener {
             override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
                 if (snapshot.exists()) {
-                    al.add(snapshot.child("name").value.toString())
-                    arrayAdapter?.notifyDataSetChanged()
+                    val item = Cards(snapshot.key, snapshot.child("name").value.toString())
+                    (cardList as ArrayList<Cards>).add(item)
+                    adapter.notifyDataSetChanged()
                 }
             }
 
