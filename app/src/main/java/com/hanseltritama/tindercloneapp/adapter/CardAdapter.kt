@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.ImageView
 import android.widget.TextView
+import com.bumptech.glide.Glide
 import com.hanseltritama.tindercloneapp.R
 import com.hanseltritama.tindercloneapp.data.Cards
 
@@ -18,7 +19,11 @@ class CardAdapter(context: Context, resId: Int, items: List<Cards>)
         val view: View = convertView ?: LayoutInflater.from(context).inflate(R.layout.item, parent, false)
 
         view.findViewById<TextView>(R.id.card_name)?.text = cardItem?.name
-        view.findViewById<ImageView>(R.id.card_image)?.setImageResource(R.mipmap.ic_launcher)
+//        view.findViewById<ImageView>(R.id.card_image)?.setImageResource(R.mipmap.ic_launcher)
+
+        Glide.with(context)
+            .load(cardItem?.imageUrl)
+            .into(view.findViewById(R.id.card_image))
 
         return view
     }

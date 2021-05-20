@@ -174,7 +174,7 @@ class MainActivity : AppCompatActivity() {
                     && !snapshot.child("connections").child("nope").hasChild(currentId.toString())
                     && !snapshot.child("connections").child("yup").hasChild(currentId.toString())) {
 
-                    val item = Cards(snapshot.key, snapshot.child("name").value.toString())
+                    val item = Cards(snapshot.key, snapshot.child("name").value.toString(), snapshot.child("imageUrl").value.toString())
                     (cardList as ArrayList<Cards>).add(item)
                     adapter.notifyDataSetChanged()
                 }

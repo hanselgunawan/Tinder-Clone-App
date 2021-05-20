@@ -22,8 +22,8 @@
 
         <FrameLayout
             android:layout_gravity="center"
-            android:layout_width="250dp"
-            android:layout_height="170dp">
+            android:layout_width="350dp"
+            android:layout_height="250dp">
 
             <ImageView
                 android:id="@+id/card_image"
@@ -32,9 +32,12 @@
 
             <TextView
                 android:id="@+id/card_name"
-                android:textSize="40sp"
+                android:textSize="20sp"
                 android:textColor="@android:color/black"
-                android:gravity="center"
+                android:gravity="bottom|end"
+                android:textStyle="bold"
+                android:paddingEnd="20dp"
+                android:paddingBottom="10dp"
                 tools:text="Hello"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
