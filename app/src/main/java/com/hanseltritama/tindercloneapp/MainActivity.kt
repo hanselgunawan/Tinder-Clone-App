@@ -1,8 +1,10 @@
 package com.hanseltritama.tindercloneapp
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.ListView
 import android.widget.Toast
@@ -31,8 +33,11 @@ class MainActivity : AppCompatActivity() {
 
     private var currentId: String? = null
 
-    private lateinit var listView: ListView
     private lateinit var cardList: List<Cards>
+
+    private var suvCount: Int = 0
+    private var sedanCount: Int = 0
+    private var jeepCount: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,6 +65,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("SetTextI18n")
+    private fun displayResult() {
+        frame.visibility = View.GONE
+        result_text.text = "SUV: $suvCount, Sedan: $sedanCount, Jeep: $jeepCount"
+    }
+
     private fun setupFlingSwipeListener() {
         val flingContainer: SwipeFlingAdapterView? = frame
 
@@ -70,6 +81,9 @@ class MainActivity : AppCompatActivity() {
                 Log.d("LIST", "removed object!")
                 (cardList as ArrayList<Cards>).removeAt(0)
                 adapter.notifyDataSetChanged()
+                if (cardList.isEmpty()) {
+                    displayResult()
+                }
             }
 
             override fun onLeftCardExit(dataObject: Any) {
@@ -87,12 +101,18 @@ class MainActivity : AppCompatActivity() {
             override fun onRightCardExit(dataObject: Any) {
                 val cardObj: Cards = dataObject as Cards
                 val userId: String? = cardObj.userId
+                val carModel: String? = cardObj.model
                 usersDb.child(oppositeUserSex ?: "")
                     .child(userId ?: "")
                     .child("connections")
                     .child("yup")
                     .child(currentId ?: "")
                     .setValue(true)
+                when (carModel) {
+                    "SUV" -> suvCount++
+                    "sedan" -> sedanCount++
+                    "jeep" -> jeepCount++
+                }
                 Toast.makeText(this@MainActivity, "Yup!", Toast.LENGTH_SHORT).show()
             }
 
@@ -174,7 +194,12 @@ class MainActivity : AppCompatActivity() {
                     && !snapshot.child("connections").child("nope").hasChild(currentId.toString())
                     && !snapshot.child("connections").child("yup").hasChild(currentId.toString())) {
 
-                    val item = Cards(snapshot.key, snapshot.child("name").value.toString(), snapshot.child("imageUrl").value.toString())
+                    val item = Cards(
+                        snapshot.key,
+                        snapshot.child("name").value.toString(),
+                        snapshot.child("imageUrl").value.toString(),
+                        snapshot.child("model").value.toString()
+                    )
                     (cardList as ArrayList<Cards>).add(item)
                     adapter.notifyDataSetChanged()
                 }
